@@ -9,6 +9,7 @@ from quantopian.pipeline.data.builtin import USEquityPricing
 from quantopian.pipeline.factors import AverageDollarVolume, SimpleMovingAverage, Returns, CustomFactor, Latest
 from quantopian.pipeline.factors.eventvestor import BusinessDaysUntilNextEarnings, BusinessDaysSincePreviousEarnings
 
+
 class CrossSectionalMomentum(CustomFactor):
     inputs = [USEquityPricing.close]
     window_length = 252
@@ -17,6 +18,7 @@ class CrossSectionalMomentum(CustomFactor):
         prices = pd.DataFrame(prices)
         R = (prices / prices.shift(100))
         out[:] = (R.T - R.T.mean()).T.mean()
+
 
 def make_pipeline():
     # Basic momentum metrics.
@@ -72,9 +74,9 @@ def make_pipeline():
     pipe = Pipeline(columns = pipe_columns, screen = pipe_screen)
     return pipe
 
+
 # The context object will be passed to the other methods in the algorithm.
 def initialize(context):
-
     attach_pipeline(make_pipeline(), 'momentum_metrics')
 
     context.shorts = None
@@ -84,6 +86,7 @@ def initialize(context):
     # Schedule momentum function weekly.
     schedule_function(momentum, date_rules.month_start())
 
+
 def before_trading_start(context, data):
     context.output = pipeline_output('momentum_metrics')
     ranks = context.output['combined_rank']
@@ -92,6 +95,7 @@ def before_trading_start(context, data):
     context.shorts = ranks[context.output['shorts']]
 
     context.active_portfolio = context.longs.index.union(context.shorts.index)
+
 
 def momentum(context, data):
     # Logic for buying long on selected stocks.
@@ -113,6 +117,7 @@ def momentum(context, data):
         if data.can_trade(security):
             if security not in (context.longs.index | context.shorts.index):
                 order_target_percent(security, 0)
+
 
 # Will be called on every trade event for the securities specified.
 def handle_data(context, data):
